@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>LIFF → n8n Test</title>
+  <title>My First LIFF App — v2025-09-08a</title>
   <style>
     :root { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
     body { margin: 0; padding: 24px; }
@@ -19,7 +19,7 @@
 </head>
 <body>
   <div class="card">
-    <h1>LIFF → n8n Test</h1>
+    <h1>My First LIFF App</h1>
     <p id="status" class="muted">Initializing…</p>
 
     <div id="profile" style="display:none">
@@ -39,7 +39,7 @@
     </div>
 
     <h3 style="margin-top:24px">Debug</h3>
-    <div id="debug">(loading…)</div>
+    <div id="debug">(boot)</div>
   </div>
 
   <!-- LIFF SDK -->
@@ -65,7 +65,10 @@
       debug: document.getElementById('debug'),
     };
 
-    function log(line) { el.debug.textContent += `\n${line}`; }
+    function log(line) { el.debug.textContent += `
+${line}`; }
+    window.addEventListener('error', (e)=>{ log('window.onerror: ' + e.message); });
+    window.addEventListener('unhandledrejection', (e)=>{ log('unhandledrejection: ' + (e.reason?.message || e.reason)); });
 
     function li() {
       // minimal launch info for troubleshooting
@@ -128,9 +131,57 @@
     }
 
     async function main(){
-      el.debug.textContent = '(starting)';
+      el.debug.textContent = '(script loaded)';
       try {
+        log('liff.init…');
         await liff.init({ liffId: LIFF_ID, withLoginOnExternalBrowser: true });
+        log('liff.init done');
+        el.debug.textContent += '
+' + li();
+
+        if (!liff.isLoggedIn()) {
+          if (liff.isInClient()) {
+            el.status.textContent = 'Not launched as LIFF. Tap Open via LIFF.';
+            el.open.style.display = 'inline-block';
+            el.open.href = LIFF_URL;
+            log('not logged in, inClient=true');
+            return;
+          }
+          el.status.textContent = 'Redirecting to LINE Login…';
+          log('calling liff.login');
+          liff.login({ redirectUri: location.href });
+          return;
+        }
+
+        el.status.textContent = 'Getting profile…';
+        const profile = await liff.getProfile();
+        log('got profile');
+
+        el.name.textContent = profile.displayName || '(no name)';
+        el.uid.textContent = 'User ID: ' + (profile.userId || '(hidden)');
+        if (profile.pictureUrl) el.pic.src = profile.pictureUrl;
+        el.profile.style.display = 'block';
+
+        // Auto-send once
+        el.status.textContent = 'Sending to n8n…';
+        const ok = await sendToN8N(buildPayload(profile));
+        el.status.textContent = ok ? 'Sent (or queued). Tap "Send to n8n" to resend.' : 'Send failed.';
+        if (ok) log('send ok'); else log('send failed');
+
+        // Manual resend
+        el.send.style.display = 'inline-block';
+        el.send.onclick = async (e)=>{
+          e.preventDefault();
+          el.status.textContent = 'Resending…';
+          const again = await sendToN8N(buildPayload(profile));
+          el.status.textContent = again ? 'Sent (manual).' : 'Still failing.';
+          log('manual send: ' + (again ? 'ok' : 'fail'));
+        };
+      } catch (err) {
+        el.status.textContent = 'Error: ' + (err?.message || err);
+        log('error: ' + (err?.stack || err));
+      }
+    });
         el.debug.textContent = li();
 
         if (!liff.isLoggedIn()) {
