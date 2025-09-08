@@ -1,59 +1,154 @@
+<!-- File: /index.html -->
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>My First LIFF App</title>
   <style>
-    #profile-pic {
-      width: 100px;
-      height: 100px;
-      border-radius: 50%;
-    }
+    :root { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+    body { margin: 0; padding: 24px; }
+    .card { max-width: 560px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+    #profile-pic { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; }
+    #debug { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; background: #fafafa; border: 1px dashed #ccc; padding: 10px; border-radius: 8px; white-space: pre-wrap; }
+    .row { display: flex; gap: 12px; align-items: center; }
+    .btn { display: inline-block; padding: 10px 14px; border-radius: 10px; border: 1px solid #ccc; text-decoration: none; }
+    .btn-primary { background: #06c755; color: #fff; border-color: #06c755; }
+    .muted { color: #666; }
   </style>
 </head>
 <body>
+  <div class="card">
+    <h1>Welcome to my LIFF App!</h1>
+    <p id="status" class="muted">Initializing LIFF…</p>
 
-  <h1>Welcome to my LIFF App!</h1>
-  <div id="profile-info"></div>
-  <p id="status">Initializing LIFF...</p>
+    <div id="profile" style="display:none">
+      <div class="row">
+        <img id="profile-pic" alt="Profile picture" />
+        <div>
+          <h2 id="display-name" style="margin: 0 0 6px"></h2>
+          <div id="user-id" class="muted"></div>
+        </div>
+      </div>
+    </div>
 
+    <div id="actions" style="margin-top:16px; display:none">
+      <a id="login-btn" class="btn btn-primary" href="#">Login with LINE</a>
+      <a id="open-liff-link" class="btn" target="_self">Open via LIFF</a>
+    </div>
+
+    <h3 style="margin-top:24px">Debug</h3>
+    <div id="debug">(loading…)</div>
+  </div>
+
+  <!-- LIFF SDK -->
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
   <script>
-    async function initializeLiff() {
+    const LIFF_ID = "2008075804-2AER9wYe"; // <- your LIFF ID
+    const LIFF_URL = `https://liff.line.me/${LIFF_ID}`; // use this to launch inside LINE
+
+    const els = {
+      status: document.getElementById("status"),
+      profile: document.getElementById("profile"),
+      pic: document.getElementById("profile-pic"),
+      name: document.getElementById("display-name"),
+      uid: document.getElementById("user-id"),
+      actions: document.getElementById("actions"),
+      loginBtn: document.getElementById("login-btn"),
+      openLiff: document.getElementById("open-liff-link"),
+      debug: document.getElementById("debug"),
+    };
+
+    function setDebug(lines) {
+      els.debug.textContent = Array.isArray(lines) ? lines.join("\n") : String(lines);
+    }
+
+    function currentRelativePath() {
+      const rel = location.pathname + location.search + location.hash;
+      return rel.startsWith('/') ? rel : ('/' + rel);
+    }
+
+    function buildLiffLaunchUrl() {
+      // Preserve return path when launching via LIFF
+      const state = encodeURIComponent(currentRelativePath());
+      return `${LIFF_URL}?liff.state=${state}`;
+    }
+
+    function showOpenViaLiffUI(message) {
+      els.status.textContent = message;
+      els.actions.style.display = "block";
+      els.loginBtn.style.display = "none"; // why: login() cannot be used reliably when not launched as LIFF inside the client
+      els.openLiff.href = buildLiffLaunchUrl();
+      els.openLiff.textContent = "Open with LIFF";
+    }
+
+    async function init() {
       try {
-        await liff.init({
-          liffId: "2008075804-2AER9wYe" // Your LIFF ID
-        });
-        
-        document.getElementById("status").innerText = "Checking login status...";
+        await liff.init({ liffId: LIFF_ID, withLoginOnExternalBrowser: true });
 
-        // ✨ NEW LOGIN CHECK STARTS HERE ✨
-        if (!liff.isLoggedIn()) {
-          document.getElementById("status").innerText = "Not logged in. Logging in...";
-          liff.login(); // This will redirect the user to the LINE login screen
-        } else {
-          document.getElementById("status").innerText = "Logged in! Getting profile...";
-          // Get user profile
-          const profile = await liff.getProfile();
-          
-          // Display user profile
-          document.getElementById("profile-info").innerHTML = `
-            <h2>Hello, ${profile.displayName}!</h2>
-            <img id="profile-pic" src="${profile.pictureUrl}" alt="Profile Picture">
-          `;
-          document.getElementById("status").innerText = ""; // Clear status message
+        const inClient = liff.isInClient();
+        const loggedIn = liff.isLoggedIn();
+        const token = liff.getAccessToken();
+        setDebug([
+          `isInClient: ${inClient}`,
+          `isLoggedIn: ${loggedIn}`,
+          `hasAccessToken: ${Boolean(token)}`,
+          `userAgent: ${navigator.userAgent}`,
+        ]);
+
+        if (!loggedIn) {
+          if (inClient) {
+            // In LINE's in-app browser but **not** launched as a LIFF app
+            showOpenViaLiffUI("This page was opened as a normal web page inside LINE. Please open it via the official LIFF link.");
+            return;
+          }
+          // External browser: trigger LINE Login and return here after auth
+          els.status.textContent = "Redirecting to LINE Login…";
+          liff.login({ redirectUri: window.location.href });
+          return; // stop running after redirect call
         }
-        // ✨ NEW LOGIN CHECK ENDS HERE ✨
 
-      } catch (e) {
-        document.getElementById("status").innerText = "Error initializing LIFF: " + e.message;
+        // Logged in: ensure token before calling profile API
+        if (!token) {
+          showOpenViaLiffUI("Logged in but no access token. Please reopen via LIFF link.");
+          return;
+        }
+
+        els.status.textContent = "Getting profile…";
+        const profile = await liff.getProfile();
+
+        els.name.textContent = `Hello, ${profile.displayName}!`;
+        els.uid.textContent = profile.userId ? `User ID: ${profile.userId}` : "";
+        if (profile.pictureUrl) els.pic.src = profile.pictureUrl;
+        els.profile.style.display = "block";
+        els.status.textContent = "";
+
+      } catch (err) {
+        // Expose useful error info for troubleshooting
+        const msg = `Error initializing LIFF: ${err?.message || err}`;
+        els.status.textContent = msg;
+        setDebug([
+          msg,
+          `isInClient: ${safe(() => liff.isInClient())}`,
+          `isLoggedIn: ${safe(() => liff.isLoggedIn())}`,
+          `hasAccessToken: ${safe(() => Boolean(liff.getAccessToken()))}`,
+        ]);
       }
     }
 
-    initializeLiff();
-  </script>
+    function safe(fn) { try { return fn(); } catch { return "(n/a)"; } }
 
+    // Manual login button for external browsers only
+    els.loginBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      liff.login({ redirectUri: window.location.href });
+    });
+
+    // Prepare default LIFF link now so it's visible even before init completes
+    els.openLiff.href = buildLiffLaunchUrl();
+
+    init();
+  </script>
 </body>
 </html>
