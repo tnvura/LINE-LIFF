@@ -35,6 +35,7 @@
     <div id="actions" style="margin-top:16px; display:none">
       <a id="login-btn" class="btn btn-primary" href="#">Login with LINE</a>
       <a id="open-liff-link" class="btn" target="_self">Open via LIFF</a>
+      <a id="send-btn" class="btn" href="#" style="display:none">Send to n8n</a>
     </div>
 
     <h3 style="margin-top:24px">Debug</h3>
@@ -58,6 +59,7 @@
       actions: document.getElementById("actions"),
       loginBtn: document.getElementById("login-btn"),
       openLiff: document.getElementById("open-liff-link"),
+      sendBtn: document.getElementById("send-btn"),
       debug: document.getElementById("debug"),
     };
 
@@ -67,21 +69,46 @@
     }
 
     async function sendWebhook(payload) {
+      const data = JSON.stringify(payload);
+
+      // 1) Prefer Beacon API (no CORS, survives page unload)
+      if (navigator.sendBeacon) {
+        try {
+          const ok = navigator.sendBeacon(WEBHOOK_URL, new Blob([data], { type: "text/plain;charset=UTF-8" }));
+          if (ok) return true;
+        } catch {}
+      }
+
+      // 2) Fallback: no-cors fetch using a simple content type to avoid preflight
       try {
-        // why: keepalive improves delivery even if page navigates away after login
-        const res = await fetch(WEBHOOK_URL, {
+        await fetch(WEBHOOK_URL, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
+          mode: "no-cors",
+          headers: { "Content-Type": "text/plain;charset=UTF-8" }, // why: keeps it a simple request, avoids OPTIONS
+          body: data,
           keepalive: true,
         });
-        return res.ok;
-      } catch (e) {
-        return false;
-      }
+        // In no-cors we can't read status; assume success if no exception
+        return true;
+      } catch {}
+
+      // 3) Last resort: GET image ping with compact payload (length-limited)
+      try {
+        const img = new Image();
+        const base64 = btoa(unescape(encodeURIComponent(data)));
+        const p = encodeURIComponent(base64.slice(0, 1800)); // guard overly long URLs
+        img.src = `${WEBHOOK_URL}?p=${p}&_ts=${Date.now()}`;
+        await new Promise((resolve) => {
+          const t = setTimeout(resolve, 2500);
+          img.onload = img.onerror = () => { clearTimeout(t); resolve(); };
+        });
+        return true;
+      } catch {}
+
+      return false;
     }
 
-    function buildPayload({ profile, token, idp }) {
+    function buildPayload({ profile, token, idp }) {({ profile, token, idp }) {
       return {
         ts: new Date().toISOString(),
         location: window.location.href,
@@ -166,16 +193,22 @@
         els.uid.textContent = profile.userId ? `User ID: ${profile.userId}` : "";
         if (profile.pictureUrl) els.pic.src = profile.pictureUrl;
         els.profile.style.display = "block";
-        els.status.textContent = "Sending data to webhook…";
         const idp = safe(() => liff.getDecodedIDToken());
         const payload = buildPayload({ profile, token, idp });
+
+        // Auto-send once
+        els.status.textContent = "Sending data to webhook…";
         const ok = await sendWebhook(payload);
-        if (!ok) {
-          // why: surface failure to user for troubleshooting
-          els.status.textContent = "Webhook failed (check network/CORS).";
-        } else {
-          els.status.textContent = "";
-        }
+        els.status.textContent = ok ? "" : "Webhook failed (network/CORS). Tap 'Send to n8n' to retry.";
+
+        // Expose manual resend button
+        els.sendBtn.style.display = "inline-block";
+        els.sendBtn.onclick = async (e) => {
+          e.preventDefault();
+          els.status.textContent = "Resending…";
+          const sent = await sendWebhook(payload);
+          els.status.textContent = sent ? "Sent!" : "Still failing. Check n8n CORS (OPTIONS) or use HTTPS/valid cert.";
+        };
 
       } catch (err) {
         // Expose useful error info for troubleshooting
