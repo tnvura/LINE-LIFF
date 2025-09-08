@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LINE LIFF App</title>
+    <title>Customer Survey</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -44,66 +44,6 @@
             font-weight: 500;
         }
         
-        .user-info {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            padding: 20px;
-            margin: 20px 0;
-        }
-        
-        .user-info h3 {
-            margin: 0 0 15px 0;
-            font-size: 18px;
-        }
-        
-        .info-item {
-            display: flex;
-            justify-content: space-between;
-            margin: 10px 0;
-            padding: 8px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .info-item:last-child {
-            border-bottom: none;
-        }
-        
-        .label {
-            font-weight: 600;
-            opacity: 0.8;
-        }
-        
-        .value {
-            font-family: monospace;
-            word-break: break-all;
-        }
-        
-        button {
-            background: white;
-            color: #00B900;
-            border: none;
-            border-radius: 8px;
-            padding: 12px 24px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            width: 100%;
-            margin: 10px 0;
-            transition: all 0.3s ease;
-        }
-        
-        button:hover {
-            background: #f0f0f0;
-            transform: translateY(-2px);
-        }
-        
-        button:disabled {
-            background: #ccc;
-            color: #666;
-            cursor: not-allowed;
-            transform: none;
-        }
-        
         .success {
             background: rgba(0, 185, 0, 0.2);
             color: #00ff00;
@@ -122,6 +62,146 @@
             border: 1px solid rgba(255, 255, 0, 0.3);
         }
         
+        .survey-form {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 25px;
+            margin: 20px 0;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .form-group input[type="text"],
+        .form-group select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 16px;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+        
+        .form-group input[type="text"]:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: rgba(255, 255, 255, 0.6);
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+        }
+        
+        .form-group input[type="text"]::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .form-group select option {
+            background: #00B900;
+            color: white;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            padding: 8px 0;
+            font-weight: 500;
+        }
+        
+        .checkbox-label input[type="checkbox"] {
+            opacity: 0;
+            position: absolute;
+        }
+        
+        .checkmark {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.6);
+            border-radius: 4px;
+            margin-right: 12px;
+            position: relative;
+            background: transparent;
+            transition: all 0.3s ease;
+        }
+        
+        .checkbox-label input[type="checkbox"]:checked + .checkmark {
+            background: white;
+            border-color: white;
+        }
+        
+        .checkbox-label input[type="checkbox"]:checked + .checkmark::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #00B900;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin: 30px 0 20px 0;
+        }
+        
+        button {
+            background: white;
+            color: #00B900;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+        
+        button:hover {
+            background: #f0f0f0;
+            transform: translateY(-2px);
+        }
+        
+        button:disabled {
+            background: #ccc;
+            color: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .secondary-button {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.4);
+        }
+        
+        .secondary-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.6);
+            color: white;
+            transform: translateY(-2px);
+        }
+        
         .webhook-response {
             background: rgba(255, 255, 255, 0.1);
             border-radius: 8px;
@@ -137,39 +217,70 @@
 </head>
 <body>
     <div class="container">
-        <h1>🔗 LINE LIFF App</h1>
+        <h1>📋 Customer Survey</h1>
         
         <div id="status" class="status loading">
             Initializing LIFF...
         </div>
         
-        <div id="userInfo" class="user-info" style="display: none;">
-            <h3>👤 User Information</h3>
-            <div class="info-item">
-                <span class="label">Display Name:</span>
-                <span id="displayName" class="value">-</span>
+        <form id="surveyForm" class="survey-form" style="display: none;">
+            <div class="form-group">
+                <label for="customerName">Customer Name *</label>
+                <input type="text" id="customerName" name="customerName" required placeholder="Enter customer name">
             </div>
-            <div class="info-item">
-                <span class="label">User ID:</span>
-                <span id="userId" class="value">-</span>
+            
+            <div class="form-group">
+                <label for="companyName">Company Name *</label>
+                <input type="text" id="companyName" name="companyName" required placeholder="Enter company name">
             </div>
-            <div class="info-item">
-                <span class="label">Status Message:</span>
-                <span id="statusMessage" class="value">-</span>
+            
+            <div class="form-group">
+                <label for="segment">Segment *</label>
+                <select id="segment" name="segment" required>
+                    <option value="">Select segment...</option>
+                    <option value="standalone-restaurant">Standalone Restaurant</option>
+                    <option value="chain-restaurant">Chain Restaurant</option>
+                </select>
             </div>
-            <div class="info-item">
-                <span class="label">Picture URL:</span>
-                <span id="pictureUrl" class="value">-</span>
+            
+            <div class="form-group">
+                <label for="pricePeriod">Price Period *</label>
+                <select id="pricePeriod" name="pricePeriod" required>
+                    <option value="">Select price period...</option>
+                    <option value="7-days">7 days</option>
+                    <option value="15-days">15 days</option>
+                    <option value="30-days">30 days</option>
+                    <option value="60-days">60 days</option>
+                    <option value="90-days">90 days</option>
+                </select>
             </div>
+            
+            <div class="form-group">
+                <label>Payment Method *</label>
+                <div class="checkbox-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="paymentMethod" value="cash">
+                        <span class="checkmark"></span>
+                        Cash
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="paymentMethod" value="credit-term">
+                        <span class="checkmark"></span>
+                        Credit Term
+                    </label>
+                </div>
+            </div>
+        </form>
+        
+        <div class="button-group" id="buttonGroup" style="display: none;">
+            <button id="submitButton" onclick="submitSurvey()">
+                📤 Submission
+            </button>
+            
+            <button id="resetButton" onclick="resetForm()" class="secondary-button">
+                🔄 Reset
+            </button>
         </div>
-        
-        <button id="sendWebhook" onclick="sendToWebhook()" disabled>
-            📤 Send to n8n Webhook
-        </button>
-        
-        <button id="closeApp" onclick="closeLiff()" disabled>
-            ❌ Close LIFF
-        </button>
         
         <div id="webhookResponse" class="webhook-response" style="display: none;">
             <h4>Webhook Response:</h4>
@@ -194,7 +305,6 @@
                 if (liff.isLoggedIn()) {
                     updateStatus('✅ LIFF initialized successfully!', 'success');
                     await getUserProfile();
-                    enableButtons();
                 } else {
                     updateStatus('❌ User not logged in', 'error');
                     liff.login();
@@ -209,55 +319,58 @@
         async function getUserProfile() {
             try {
                 userProfile = await liff.getProfile();
-                displayUserInfo(userProfile);
+                document.getElementById('surveyForm').style.display = 'block';
+                document.getElementById('buttonGroup').style.display = 'block';
             } catch (error) {
                 console.error('Failed to get profile:', error);
                 updateStatus(`❌ Failed to get profile: ${error.message}`, 'error');
             }
         }
         
-        // Display user information
-        function displayUserInfo(profile) {
-            document.getElementById('displayName').textContent = profile.displayName || 'N/A';
-            document.getElementById('userId').textContent = profile.userId || 'N/A';
-            document.getElementById('statusMessage').textContent = profile.statusMessage || 'N/A';
-            document.getElementById('pictureUrl').textContent = profile.pictureUrl || 'N/A';
-            
-            document.getElementById('userInfo').style.display = 'block';
-        }
-        
-        // Send data to n8n webhook
-        async function sendToWebhook() {
+        // Submit survey data
+        async function submitSurvey() {
             if (!userProfile) {
                 updateStatus('❌ No user profile available', 'error');
                 return;
             }
             
-            updateStatus('📤 Sending to webhook...', 'loading');
-            document.getElementById('sendWebhook').disabled = true;
+            // Validate form
+            const form = document.getElementById('surveyForm');
+            if (!form.checkValidity()) {
+                updateStatus('❌ Please fill in all required fields', 'error');
+                return;
+            }
+            
+            // Check payment method selection
+            const paymentMethods = document.querySelectorAll('input[name="paymentMethod"]:checked');
+            if (paymentMethods.length === 0) {
+                updateStatus('❌ Please select at least one payment method', 'error');
+                return;
+            }
+            
+            updateStatus('📤 Submitting survey...', 'loading');
+            document.getElementById('submitButton').disabled = true;
+            
+            // Collect form data
+            const formData = {
+                customerName: document.getElementById('customerName').value.trim(),
+                companyName: document.getElementById('companyName').value.trim(),
+                segment: document.getElementById('segment').value,
+                pricePeriod: document.getElementById('pricePeriod').value,
+                paymentMethods: Array.from(paymentMethods).map(cb => cb.value)
+            };
             
             const webhookData = {
                 timestamp: new Date().toISOString(),
                 liffId: LIFF_ID,
-                userProfile: {
+                survey: formData,
+                lineUser: {
                     userId: userProfile.userId,
-                    displayName: userProfile.displayName,
-                    statusMessage: userProfile.statusMessage,
-                    pictureUrl: userProfile.pictureUrl
+                    displayName: userProfile.displayName
                 },
                 context: {
                     type: liff.getContext()?.type || 'unknown',
-                    viewType: liff.getContext()?.viewType || 'unknown',
-                    userId: liff.getContext()?.userId || 'unknown',
-                    utouId: liff.getContext()?.utouId || 'unknown'
-                },
-                environment: {
-                    isInClient: liff.isInClient(),
-                    isLoggedIn: liff.isLoggedIn(),
-                    os: liff.getOS(),
-                    version: liff.getVersion(),
-                    language: liff.getLanguage(),
-                    lineVersion: liff.getLineVersion()
+                    viewType: liff.getContext()?.viewType || 'unknown'
                 }
             };
             
@@ -280,18 +393,25 @@
                 }
                 
                 if (response.ok) {
-                    updateStatus('✅ Successfully sent to webhook!', 'success');
+                    updateStatus('✅ Survey submitted successfully!', 'success');
                     showWebhookResponse(responseData);
                 } else {
-                    updateStatus(`❌ Webhook failed: ${response.status} ${response.statusText}`, 'error');
+                    updateStatus(`❌ Submission failed: ${response.status} ${response.statusText}`, 'error');
                     showWebhookResponse(responseData);
                 }
             } catch (error) {
-                console.error('Webhook error:', error);
-                updateStatus(`❌ Webhook error: ${error.message}`, 'error');
+                console.error('Submission error:', error);
+                updateStatus(`❌ Submission error: ${error.message}`, 'error');
             } finally {
-                document.getElementById('sendWebhook').disabled = false;
+                document.getElementById('submitButton').disabled = false;
             }
+        }
+        
+        // Reset form
+        function resetForm() {
+            document.getElementById('surveyForm').reset();
+            document.getElementById('webhookResponse').style.display = 'none';
+            updateStatus('✅ LIFF initialized successfully!', 'success');
         }
         
         // Show webhook response
