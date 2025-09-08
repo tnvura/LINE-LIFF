@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My First LIFF App</title>
+</head>
+<body>
+
+  <h1>Welcome to my LIFF App!</h1>
+  <p id="status">Initializing LIFF...</p>
+
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
+  <script>
+    // 2. Initialize LIFF
+    async function initializeLiff() {
+      try {
+        await liff.init({
+          liffId: "2008075804-2AER9wYe" // 👈 PASTE YOUR LIFF ID HERE
+        });
+        document.getElementById("status").innerText = "LIFF initialized successfully!";
+        // You can add more LIFF functions here
+      } catch (e) {
+        document.getElementById("status").innerText = "Error initializing LIFF: " + e.message;
+      }
+    }
+
+    initializeLiff();
+  </script>
+
+</body>
+</html>
