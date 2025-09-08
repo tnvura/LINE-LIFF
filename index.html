@@ -21,24 +21,31 @@
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
   <script>
-    // 2. Initialize LIFF
     async function initializeLiff() {
       try {
         await liff.init({
-          liffId: "2008075804-2AER9wYe" // 👈 PASTE YOUR LIFF ID HERE
+          liffId: "2008075804-2AER9wYe" // Your LIFF ID
         });
-        document.getElementById("status").innerText = "LIFF initialized successfully!";
         
-        // ✨ NEW PART STARTS HERE ✨
-        // 3. Get user profile
-        const profile = await liff.getProfile();
-        
-        // 4. Display user profile
-        document.getElementById("profile-info").innerHTML = `
-          <h2>Hello, ${profile.displayName}!</h2>
-          <img id="profile-pic" src="${profile.pictureUrl}" alt="Profile Picture">
-        `;
-        // ✨ NEW PART ENDS HERE ✨
+        document.getElementById("status").innerText = "Checking login status...";
+
+        // ✨ NEW LOGIN CHECK STARTS HERE ✨
+        if (!liff.isLoggedIn()) {
+          document.getElementById("status").innerText = "Not logged in. Logging in...";
+          liff.login(); // This will redirect the user to the LINE login screen
+        } else {
+          document.getElementById("status").innerText = "Logged in! Getting profile...";
+          // Get user profile
+          const profile = await liff.getProfile();
+          
+          // Display user profile
+          document.getElementById("profile-info").innerHTML = `
+            <h2>Hello, ${profile.displayName}!</h2>
+            <img id="profile-pic" src="${profile.pictureUrl}" alt="Profile Picture">
+          `;
+          document.getElementById("status").innerText = ""; // Clear status message
+        }
+        // ✨ NEW LOGIN CHECK ENDS HERE ✨
 
       } catch (e) {
         document.getElementById("status").innerText = "Error initializing LIFF: " + e.message;
