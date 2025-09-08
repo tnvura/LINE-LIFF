@@ -47,6 +47,7 @@
   <script>
     const LIFF_ID = "2008075804-2AER9wYe"; // <- your LIFF ID
     const LIFF_URL = `https://liff.line.me/${LIFF_ID}`; // use this to launch inside LINE
+    const WEBHOOK_URL = "https://n8n.tnvura.dev/webhook-test/1044c42f-7f8b-419f-8b02-9650a47623c0"; // why: send login data to n8n webhook
 
     const els = {
       status: document.getElementById("status"),
@@ -61,10 +62,53 @@
     };
 
     function setDebug(lines) {
-      els.debug.textContent = Array.isArray(lines) ? lines.join("\n") : String(lines);
+      els.debug.textContent = Array.isArray(lines) ? lines.join("
+") : String(lines);
     }
 
-    function currentRelativePath() {
+    async function sendWebhook(payload) {
+      try {
+        // why: keepalive improves delivery even if page navigates away after login
+        const res = await fetch(WEBHOOK_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+          keepalive: true,
+        });
+        return res.ok;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    function buildPayload({ profile, token, idp }) {
+      return {
+        ts: new Date().toISOString(),
+        location: window.location.href,
+        liff: {
+          id: LIFF_ID,
+          isInClient: safe(() => liff.isInClient()),
+          isLoggedIn: safe(() => liff.isLoggedIn()),
+          os: safe(() => liff.getOS()),
+          language: safe(() => liff.getLanguage()),
+          context: safe(() => liff.getContext()),
+        },
+        profile: {
+          displayName: profile?.displayName || null,
+          userId: profile?.userId || null,
+          pictureUrl: profile?.pictureUrl || null,
+          statusMessage: profile?.statusMessage || null,
+        },
+        tokens: {
+          accessToken: token || null, // why: requested by user; sensitive
+          idToken: safe(() => liff.getIDToken()) || null,
+        },
+        idTokenPayload: idp || null,
+        userAgent: navigator.userAgent,
+      };
+    }
+
+    function currentRelativePath()() {
       const rel = location.pathname + location.search + location.hash;
       return rel.startsWith('/') ? rel : ('/' + rel);
     }
@@ -122,7 +166,16 @@
         els.uid.textContent = profile.userId ? `User ID: ${profile.userId}` : "";
         if (profile.pictureUrl) els.pic.src = profile.pictureUrl;
         els.profile.style.display = "block";
-        els.status.textContent = "";
+        els.status.textContent = "Sending data to webhook…";
+        const idp = safe(() => liff.getDecodedIDToken());
+        const payload = buildPayload({ profile, token, idp });
+        const ok = await sendWebhook(payload);
+        if (!ok) {
+          // why: surface failure to user for troubleshooting
+          els.status.textContent = "Webhook failed (check network/CORS).";
+        } else {
+          els.status.textContent = "";
+        }
 
       } catch (err) {
         // Expose useful error info for troubleshooting
