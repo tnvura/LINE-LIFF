@@ -4,10 +4,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>My First LIFF App</title>
+  <style>
+    #profile-pic {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+    }
+  </style>
 </head>
 <body>
 
   <h1>Welcome to my LIFF App!</h1>
+  <div id="profile-info"></div>
   <p id="status">Initializing LIFF...</p>
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
@@ -17,10 +25,21 @@
     async function initializeLiff() {
       try {
         await liff.init({
-          liffId: "2008075804-2AER9wYe" // 👈 PASTE YOUR LIFF ID HERE
+          liffId: "YOUR_LIFF_ID_HERE" // 👈 PASTE YOUR LIFF ID HERE
         });
         document.getElementById("status").innerText = "LIFF initialized successfully!";
-        // You can add more LIFF functions here
+        
+        // ✨ NEW PART STARTS HERE ✨
+        // 3. Get user profile
+        const profile = await liff.getProfile();
+        
+        // 4. Display user profile
+        document.getElementById("profile-info").innerHTML = `
+          <h2>Hello, ${profile.displayName}!</h2>
+          <img id="profile-pic" src="${profile.pictureUrl}" alt="Profile Picture">
+        `;
+        // ✨ NEW PART ENDS HERE ✨
+
       } catch (e) {
         document.getElementById("status").innerText = "Error initializing LIFF: " + e.message;
       }
