@@ -1,43 +1,41 @@
-<!-- File: /index.html -->
+<!-- File: /index.html (Minimal LIFF → n8n test) -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>My First LIFF App</title>
+  <title>LIFF → n8n Test</title>
   <style>
     :root { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
     body { margin: 0; padding: 24px; }
-    .card { max-width: 560px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
-    #profile-pic { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; }
-    #debug { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; background: #fafafa; border: 1px dashed #ccc; padding: 10px; border-radius: 8px; white-space: pre-wrap; }
+    .card { max-width: 560px; margin: 0 auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
     .row { display: flex; gap: 12px; align-items: center; }
-    .btn { display: inline-block; padding: 10px 14px; border-radius: 10px; border: 1px solid #ccc; text-decoration: none; }
+    #pic { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; background: #f2f2f2; }
+    .muted { color: #6b7280; }
+    .btn { display: inline-block; padding: 10px 14px; border-radius: 10px; border: 1px solid #d1d5db; text-decoration: none; cursor: pointer; }
     .btn-primary { background: #06c755; color: #fff; border-color: #06c755; }
-    .muted { color: #666; }
+    #debug { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; background: #f9fafb; border: 1px dashed #d1d5db; padding: 10px; border-radius: 8px; white-space: pre-wrap; }
   </style>
 </head>
 <body>
   <div class="card">
-    <h1>Welcome to my LIFF App!</h1>
-    <p id="status" class="muted">Initializing LIFF…</p>
+    <h1>LIFF → n8n Test</h1>
+    <p id="status" class="muted">Initializing…</p>
 
     <div id="profile" style="display:none">
       <div class="row">
-        <img id="profile-pic" alt="Profile picture" />
+        <img id="pic" alt="profile" />
         <div>
-          <h2 id="display-name" style="margin: 0 0 6px"></h2>
-          <div id="user-id" class="muted"></div>
+          <div id="name" style="font-weight:600; font-size:18px"></div>
+          <div id="uid" class="muted"></div>
         </div>
       </div>
     </div>
 
-    <div id="actions" style="margin-top:16px; display:none">
-      <a id="login-btn" class="btn btn-primary" href="#">Login with LINE</a>
-      <a id="open-liff-link" class="btn" target="_self">Open via LIFF</a>
-      <a id="send-btn" class="btn" href="#" style="display:none">Send to n8n</a>
-      <a id="send-json-btn" class="btn" href="#" style="display:none">Send JSON</a>
-      <a id="send-get-btn" class="btn" href="#" style="display:none">Send GET</a>
+    <div style="margin-top:16px">
+      <a id="login" class="btn btn-primary" href="#" style="display:none">Login</a>
+      <a id="open" class="btn" target="_self" style="display:none">Open via LIFF</a>
+      <a id="send" class="btn" href="#" style="display:none">Send to n8n</a>
     </div>
 
     <h3 style="margin-top:24px">Debug</h3>
@@ -46,290 +44,136 @@
 
   <!-- LIFF SDK -->
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-
   <script>
-    const LIFF_ID = "2008075804-2AER9wYe"; // <- your LIFF ID
-    const LIFF_URL = `https://liff.line.me/${LIFF_ID}`; // use this to launch inside LINE
-    const WEBHOOK_URLS = [
-      "https://n8n.tnvura.dev/webhook-test/1044c42f-7f8b-419f-8b02-9650a47623c0", // n8n Test URL (works only when the workflow is in Test mode)
-      "https://n8n.tnvura.dev/webhook/1044c42f-7f8b-419f-8b02-9650a47623c0"      // n8n Production URL (active workflow)
-    ]; // why: send to both to avoid silent misses
+    // ======= CONFIG =======
+    const LIFF_ID = "2008075804-2AER9wYe";             // your published LIFF ID
+    const LIFF_URL = `https://liff.line.me/${LIFF_ID}`;  // launcher
+    const WEBHOOK_URL = "https://n8n.tnvura.dev/webhook-test/1044c42f-7f8b-419f-8b02-9650a47623c0"; // n8n test URL
+    // If your workflow is ACTIVE, use the production URL instead:
+    // const WEBHOOK_URL = "https://n8n.tnvura.dev/webhook/1044c42f-7f8b-419f-8b02-9650a47623c0";
+    // =======================
 
-    const els = {
-      status: document.getElementById("status"),
-      profile: document.getElementById("profile"),
-      pic: document.getElementById("profile-pic"),
-      name: document.getElementById("display-name"),
-      uid: document.getElementById("user-id"),
-      actions: document.getElementById("actions"),
-      loginBtn: document.getElementById("login-btn"),
-      openLiff: document.getElementById("open-liff-link"),
-      sendBtn: document.getElementById("send-btn"),
-      debug: document.getElementById("debug"),
+    const el = {
+      status: document.getElementById('status'),
+      profile: document.getElementById('profile'),
+      pic: document.getElementById('pic'),
+      name: document.getElementById('name'),
+      uid: document.getElementById('uid'),
+      login: document.getElementById('login'),
+      open: document.getElementById('open'),
+      send: document.getElementById('send'),
+      debug: document.getElementById('debug'),
     };
 
-    function setDebug(lines) {
-      els.debug.textContent = Array.isArray(lines) ? lines.join("\n") : String(lines);
-    }
-    function appendDebug(line) {
-      els.debug.textContent += ("\n" + line);
+    function log(line) { el.debug.textContent += `\n${line}`; }
+
+    function li() {
+      // minimal launch info for troubleshooting
+      return [
+        `isInClient: ${safe(()=>liff.isInClient())}`,
+        `isLoggedIn: ${safe(()=>liff.isLoggedIn())}`,
+        `hasToken: ${!!safe(()=>liff.getAccessToken())}`,
+      ].join('\n');
     }
 
-    async function sendWebhookAuto(payload) {
-      // Try beacon -> no-cors text -> get ping, to BOTH URLs
-      let any = false;
-      for (const url of WEBHOOK_URLS) {
-        const data = JSON.stringify(payload);
-        // 1) Beacon
-        if (navigator.sendBeacon) {
-          try {
-            const ok = navigator.sendBeacon(url, new Blob([data], { type: "text/plain;charset=UTF-8" }));
-            appendDebug(`beacon -> ${url} : ${ok ? 'queued' : 'failed'}`);
-            any = any || ok;
-            continue; // still try others
-          } catch (e) { appendDebug(`beacon error -> ${url} : ${e}`); }
-        }
-        // 2) no-cors text
-        try {
-          await fetch(url, {
-            method: "POST",
-            mode: "no-cors",
-            headers: { "Content-Type": "text/plain;charset=UTF-8" },
-            body: data,
-            keepalive: true,
-          });
-          appendDebug(`no-cors POST -> ${url} : sent`);
-          any = true;
-        } catch (e) { appendDebug(`no-cors error -> ${url} : ${e}`); }
-        // 3) GET ping
-        try {
-          const img = new Image();
-          const base64 = btoa(unescape(encodeURIComponent(data)));
-          const p = encodeURIComponent(base64.slice(0, 1800));
-          img.src = `${url}?p=${p}&_ts=${Date.now()}`;
-          appendDebug(`GET ping -> ${img.src}`);
-          any = true;
-        } catch (e) { appendDebug(`GET ping error -> ${url} : ${e}`); }
-      }
-      return any;
+    function safe(fn){ try { return fn(); } catch { return '(n/a)'; } }
+
+    function buildPayload(profile){
+      return {
+        ts: new Date().toISOString(),
+        liffId: LIFF_ID,
+        isInClient: safe(()=>liff.isInClient()),
+        displayName: profile.displayName || null,
+        userId: profile.userId || null,
+        pictureUrl: profile.pictureUrl || null,
+      };
     }
 
-    async function sendWebhookJson(payload) {
-      // JSON POST (requires CORS on n8n)
-      let okAny = false;
-      for (const url of WEBHOOK_URLS) {
-        try {
-          const res = await fetch(url, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          });
-          appendDebug(`json POST -> ${url} : status ${res.status}`);
-          okAny = okAny || res.ok;
-        } catch (e) {
-          appendDebug(`json error -> ${url} : ${e}`);
-        }
-      }
-      return okAny;
-    }
-
-    async function sendWebhookGet(payload) {
-      let any = false;
-      for (const url of WEBHOOK_URLS) {
-        try {
-          const img = new Image();
-          const base64 = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
-          const p = encodeURIComponent(base64.slice(0, 1800));
-          img.src = `${url}?p=${p}&_ts=${Date.now()}`;
-          appendDebug(`manual GET -> ${img.src}`);
-          any = true;
-        } catch (e) { appendDebug(`manual GET error -> ${url} : ${e}`); }
-      }
-      return any;
-    }
-
-    async function sendWebhook(payload) {
+    async function sendToN8N(payload){
       const data = JSON.stringify(payload);
 
-      // 1) Prefer Beacon API (no CORS, survives page unload)
+      // A) Beacon (best for in-app browsers; no CORS)
       if (navigator.sendBeacon) {
         try {
-          const ok = navigator.sendBeacon(WEBHOOK_URL, new Blob([data], { type: "text/plain;charset=UTF-8" }));
+          const ok = navigator.sendBeacon(WEBHOOK_URL, new Blob([data], { type: 'text/plain;charset=UTF-8' }));
+          log(`beacon -> ${ok ? 'queued' : 'failed'}`);
           if (ok) return true;
-        } catch {}
+        } catch(e){ log(`beacon error: ${e}`); }
       }
 
-      // 2) Fallback: no-cors fetch using a simple content type to avoid preflight
+      // B) no-cors POST (server still receives; client cannot read response)
       try {
         await fetch(WEBHOOK_URL, {
-          method: "POST",
-          mode: "no-cors",
-          headers: { "Content-Type": "text/plain;charset=UTF-8" }, // why: keeps it a simple request, avoids OPTIONS
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'text/plain;charset=UTF-8' }, // simple request (no preflight)
           body: data,
           keepalive: true,
         });
-        // In no-cors we can't read status; assume success if no exception
+        log('no-cors POST -> sent');
         return true;
-      } catch {}
+      } catch(e){ log(`no-cors error: ${e}`); }
 
-      // 3) Last resort: GET image ping with compact payload (length-limited)
+      // C) GET image ping (works even if POST blocked). Requires Webhook node to allow GET.
       try {
         const img = new Image();
-        const base64 = btoa(unescape(encodeURIComponent(data)));
-        const p = encodeURIComponent(base64.slice(0, 1800)); // guard overly long URLs
-        img.src = `${WEBHOOK_URL}?p=${p}&_ts=${Date.now()}`;
-        await new Promise((resolve) => {
-          const t = setTimeout(resolve, 2500);
-          img.onload = img.onerror = () => { clearTimeout(t); resolve(); };
-        });
+        const compact = btoa(unescape(encodeURIComponent(data))).slice(0, 1800);
+        const url = `${WEBHOOK_URL}?p=${encodeURIComponent(compact)}&_ts=${Date.now()}`;
+        img.src = url;
+        log('GET ping -> ' + url);
         return true;
-      } catch {}
+      } catch(e){ log(`GET ping error: ${e}`); }
 
       return false;
     }
 
-    function buildPayload({ profile, token, idp }) {({ profile, token, idp }) {
-      return {
-        ts: new Date().toISOString(),
-        location: window.location.href,
-        liff: {
-          id: LIFF_ID,
-          isInClient: safe(() => liff.isInClient()),
-          isLoggedIn: safe(() => liff.isLoggedIn()),
-          os: safe(() => liff.getOS()),
-          language: safe(() => liff.getLanguage()),
-          context: safe(() => liff.getContext()),
-        },
-        profile: {
-          displayName: profile?.displayName || null,
-          userId: profile?.userId || null,
-          pictureUrl: profile?.pictureUrl || null,
-          statusMessage: profile?.statusMessage || null,
-        },
-        tokens: {
-          accessToken: token || null, // why: requested by user; sensitive
-          idToken: safe(() => liff.getIDToken()) || null,
-        },
-        idTokenPayload: idp || null,
-        userAgent: navigator.userAgent,
-      };
-    }
-
-    function currentRelativePath()() {
-      const rel = location.pathname + location.search + location.hash;
-      return rel.startsWith('/') ? rel : ('/' + rel);
-    }
-
-    function buildLiffLaunchUrl() {
-      // Preserve return path when launching via LIFF
-      const state = encodeURIComponent(currentRelativePath());
-      return `${LIFF_URL}?liff.state=${state}`;
-    }
-
-    function showOpenViaLiffUI(message) {
-      els.status.textContent = message;
-      els.actions.style.display = "block";
-      els.loginBtn.style.display = "none"; // why: login() cannot be used reliably when not launched as LIFF inside the client
-      els.openLiff.href = buildLiffLaunchUrl();
-      els.openLiff.textContent = "Open with LIFF";
-    }
-
-    async function init() {
+    async function main(){
+      el.debug.textContent = '(starting)';
       try {
         await liff.init({ liffId: LIFF_ID, withLoginOnExternalBrowser: true });
+        el.debug.textContent = li();
 
-        const inClient = liff.isInClient();
-        const loggedIn = liff.isLoggedIn();
-        const token = liff.getAccessToken();
-        setDebug([
-          `isInClient: ${inClient}`,
-          `isLoggedIn: ${loggedIn}`,
-          `hasAccessToken: ${Boolean(token)}`,
-          `userAgent: ${navigator.userAgent}`,
-        ]);
-
-        if (!loggedIn) {
-          if (inClient) {
-            // In LINE's in-app browser but **not** launched as a LIFF app
-            showOpenViaLiffUI("This page was opened as a normal web page inside LINE. Please open it via the official LIFF link.");
+        if (!liff.isLoggedIn()) {
+          if (liff.isInClient()) {
+            el.status.textContent = 'Open via LIFF link to continue.';
+            el.open.style.display = 'inline-block';
+            el.open.href = LIFF_URL;
             return;
           }
-          // External browser: trigger LINE Login and return here after auth
-          els.status.textContent = "Redirecting to LINE Login…";
-          liff.login({ redirectUri: window.location.href });
-          return; // stop running after redirect call
-        }
-
-        // Logged in: ensure token before calling profile API
-        if (!token) {
-          showOpenViaLiffUI("Logged in but no access token. Please reopen via LIFF link.");
+          el.status.textContent = 'Redirecting to LINE Login…';
+          liff.login({ redirectUri: location.href });
           return;
         }
 
-        els.status.textContent = "Getting profile…";
+        el.status.textContent = 'Getting profile…';
         const profile = await liff.getProfile();
 
-        els.name.textContent = `Hello, ${profile.displayName}!`;
-        els.uid.textContent = profile.userId ? `User ID: ${profile.userId}` : "";
-        if (profile.pictureUrl) els.pic.src = profile.pictureUrl;
-        els.profile.style.display = "block";
-        const idp = safe(() => liff.getDecodedIDToken());
-        const payload = buildPayload({ profile, token, idp });
+        // Show profile
+        el.name.textContent = profile.displayName;
+        el.uid.textContent = 'User ID: ' + (profile.userId || '(hidden)');
+        if (profile.pictureUrl) el.pic.src = profile.pictureUrl;
+        el.profile.style.display = 'block';
 
         // Auto-send once
-        els.status.textContent = "Sending data to webhook…";
-        const ok = await sendWebhook(payload);
-        els.status.textContent = ok ? "" : "Webhook failed (network/CORS). Tap 'Send to n8n' to retry.";
+        el.status.textContent = 'Sending to n8n…';
+        const ok = await sendToN8N(buildPayload(profile));
+        el.status.textContent = ok ? 'Sent (or queued). Tap "Send to n8n" to resend.' : 'Send failed.';
 
-        // Expose manual resend button
-        els.sendBtn.style.display = "inline-block";
-        els.sendJsonBtn.style.display = "inline-block";
-        els.sendGetBtn.style.display = "inline-block";
-
-        els.sendBtn.onclick = async (e) => {
+        // Manual resend
+        el.send.style.display = 'inline-block';
+        el.send.onclick = async (e)=>{
           e.preventDefault();
-          els.status.textContent = "Sending (auto)…";
-          const sent = await sendWebhookAuto(payload);
-          els.status.textContent = sent ? "Sent (auto)." : "Send failed.";
+          el.status.textContent = 'Resending…';
+          const again = await sendToN8N(buildPayload(profile));
+          el.status.textContent = again ? 'Sent (manual).' : 'Still failing.';
         };
-        els.sendJsonBtn.onclick = async (e) => {
-          e.preventDefault();
-          els.status.textContent = "Sending (JSON)…";
-          const sent = await sendWebhookJson(payload);
-          els.status.textContent = sent ? "Sent (JSON)." : "JSON blocked by CORS (enable on n8n).";
-        };
-        els.sendGetBtn.onclick = async (e) => {
-          e.preventDefault();
-          els.status.textContent = "Sending (GET)…";
-          const sent = await sendWebhookGet(payload);
-          els.status.textContent = sent ? "Sent (GET)." : "GET failed.";
-        };
-
       } catch (err) {
-        // Expose useful error info for troubleshooting
-        const msg = `Error initializing LIFF: ${err?.message || err}`;
-        els.status.textContent = msg;
-        setDebug([
-          msg,
-          `isInClient: ${safe(() => liff.isInClient())}`,
-          `isLoggedIn: ${safe(() => liff.isLoggedIn())}`,
-          `hasAccessToken: ${safe(() => Boolean(liff.getAccessToken()))}`,
-        ]);
+        el.status.textContent = 'Error: ' + (err?.message || err);
+        log('error: ' + (err?.stack || err));
       }
     }
 
-    function safe(fn) { try { return fn(); } catch { return "(n/a)"; } }
-
-    // Manual login button for external browsers only
-    els.loginBtn.addEventListener("click", (e) => {
-      e.preventDefault();
-      liff.login({ redirectUri: window.location.href });
-    });
-
-    // Prepare default LIFF link now so it's visible even before init completes
-    els.openLiff.href = buildLiffLaunchUrl();
-
-    init();
+    main();
   </script>
 </body>
 </html>
