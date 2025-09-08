@@ -301,26 +301,11 @@
             document.getElementById('webhookResponse').style.display = 'block';
         }
         
-        // Close LIFF app
-        function closeLiff() {
-            if (liff.isInClient()) {
-                liff.closeWindow();
-            } else {
-                window.close();
-            }
-        }
-        
         // Update status message
         function updateStatus(message, type = '') {
             const statusElement = document.getElementById('status');
             statusElement.textContent = message;
             statusElement.className = `status ${type}`;
-        }
-        
-        // Enable buttons
-        function enableButtons() {
-            document.getElementById('sendWebhook').disabled = false;
-            document.getElementById('closeApp').disabled = false;
         }
         
         // Initialize when page loads
